@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,8 +19,10 @@ func init() {
 }
 
 func main() {
-	HeartBeat()
+	// HeartBeat()
 	StreaksSleep()
+	StreaksActivity()
+	StreaksReadiness()
 }
 
 func makeOuraAPIRequest(method, endpoint string) ([]byte, error) {
@@ -52,11 +55,126 @@ func HeartBeat() {
 }
 
 func StreaksSleep() {
-	startDate := time.Now().AddDate(0, 0, -90).Format("2006-01-02") // https://go.dev/src/time/format.go
+	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02") // https://go.dev/src/time/format.go
 	endDate := time.Now().Format("2006-01-02")
 
-	fmt.Println(startDate, endDate)
+	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate))
 
-	response, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate))
-	fmt.Println(string(response))
+	var response struct {
+		Data []struct {
+			Score     int    `json:"score"`
+			TimeStamp string `json:"timestamp"`
+		} `json:"data"`
+	}
+	json.Unmarshal(responseBytes, &response)
+
+	// Current streak
+	currentStreak := 0
+	for i := len(response.Data) - 1; i >= 0; i-- {
+		if response.Data[i].Score >= 75 {
+			currentStreak++
+		} else {
+			break
+		}
+	}
+	fmt.Printf("Current streak of days with sleep score >= 75: %d\n", currentStreak)
+
+	// Longest streak this year
+	longestStreak := 0
+	currentLongStreak := 0
+	for i := 0; i < len(response.Data); i++ {
+		if response.Data[i].Score >= 75 {
+			currentLongStreak++
+			if currentLongStreak > longestStreak {
+				longestStreak = currentLongStreak
+			}
+		} else {
+			currentLongStreak = 0
+		}
+	}
+	fmt.Printf("Longest streak of days with sleep score >= 75 in the past year: %d\n", longestStreak)
+}
+
+func StreaksActivity() {
+	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+
+	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_activity?start_date=%s&end_date=%s", startDate, endDate))
+
+	var response struct {
+		Data []struct {
+			Score         int    `json:"score"`
+			TimeStamp     string `json:"timestamp"`
+			Steps         int    `json:"steps"`
+			TotalCalories int    `json:"total_calories"`
+		} `json:"data"`
+	}
+	json.Unmarshal(responseBytes, &response)
+
+	// Current streak
+	currentStreak := 0
+	for i := len(response.Data) - 1; i >= 0; i-- {
+		if response.Data[i].Score >= 75 {
+			currentStreak++
+		} else {
+			break
+		}
+	}
+	fmt.Printf("Current streak of days with activity score >= 75: %d\n", currentStreak)
+
+	// Longest streak this year
+	longestStreak := 0
+	currentLongStreak := 0
+	for i := 0; i < len(response.Data); i++ {
+		if response.Data[i].Score >= 75 {
+			currentLongStreak++
+			if currentLongStreak > longestStreak {
+				longestStreak = currentLongStreak
+			}
+		} else {
+			currentLongStreak = 0
+		}
+	}
+	fmt.Printf("Longest streak of days with sleep activity >= 75 in the past year: %d\n", longestStreak)
+}
+
+func StreaksReadiness() {
+	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+
+	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_readiness?start_date=%s&end_date=%s", startDate, endDate))
+
+	var response struct {
+		Data []struct {
+			Score     int    `json:"score"`
+			TimeStamp string `json:"timestamp"`
+		} `json:"data"`
+	}
+	json.Unmarshal(responseBytes, &response)
+
+	// Current streak
+	currentStreak := 0
+	for i := len(response.Data) - 1; i >= 0; i-- {
+		if response.Data[i].Score >= 75 {
+			currentStreak++
+		} else {
+			break
+		}
+	}
+	fmt.Printf("Current streak of days with readiness score >= 75: %d\n", currentStreak)
+
+	// Longest streak this year
+	longestStreak := 0
+	currentLongStreak := 0
+	for i := 0; i < len(response.Data); i++ {
+		if response.Data[i].Score >= 75 {
+			currentLongStreak++
+			if currentLongStreak > longestStreak {
+				longestStreak = currentLongStreak
+			}
+		} else {
+			currentLongStreak = 0
+		}
+	}
+	fmt.Printf("Longest streak of days with readiness score >= 75 in the past year: %d\n", longestStreak)
 }
