@@ -1,4 +1,4 @@
-package main
+package streaks
 
 import (
 	"encoding/json"
@@ -7,54 +7,56 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 )
 
 var pat string
 
+type streaksResult struct {
+	CurrentStreak int `json:"currentStreak"`
+	LongestStreak int `json:"longestStreak"`
+}
+
 func init() {
-	pat = os.Getenv("PAT")
-	if pat == "" {
+	if pat = os.Getenv("PAT"); pat == "" {
 		panic("PAT environment variable not set")
 	}
+
+	functions.HTTP("Streaks", streaksHttpHandler)
 }
 
-func main() {
-	// HeartBeat()
-	StreaksSleep()
-	StreaksActivity()
-	StreaksReadiness()
+func streaksHttpHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.URL.Path {
+	case "/sleep":
+		json.NewEncoder(w).Encode(streaksSleep())
+	case "/activity":
+		json.NewEncoder(w).Encode(streaksActivity())
+	case "/readiness":
+		json.NewEncoder(w).Encode(streaksReadiness())
+	case "/heartbeat":
+		json.NewEncoder(w).Encode(json.RawMessage(heartBeat()))
+	default:
+		http.Error(w, "Not found", http.StatusNotFound)
+	}
 }
 
-func makeOuraAPIRequest(method, endpoint string) ([]byte, error) {
-	client := &http.Client{}
-	url := fmt.Sprintf("https://api.ouraring.com/v2/%s", endpoint)
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
-	}
-
-	req.Header.Add("Authorization", "Bearer "+pat)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error reading response: %w", err)
-	}
-
-	return body, nil
-}
-
-func HeartBeat() {
+func heartBeat() []byte {
 	response, _ := makeOuraAPIRequest("GET", "usercollection/personal_info")
-	fmt.Println(string(response))
+	return response
 }
 
-func StreaksSleep() {
+func streaksSleep() streaksResult {
 	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02") // https://go.dev/src/time/format.go
 	endDate := time.Now().Format("2006-01-02")
 
@@ -93,9 +95,14 @@ func StreaksSleep() {
 		}
 	}
 	fmt.Printf("Longest streak of days with sleep score >= 75 in the past year: %d\n", longestStreak)
+
+	return streaksResult{
+		CurrentStreak: currentStreak,
+		LongestStreak: longestStreak,
+	}
 }
 
-func StreaksActivity() {
+func streaksActivity() streaksResult {
 	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02")
 	endDate := time.Now().Format("2006-01-02")
 
@@ -136,9 +143,14 @@ func StreaksActivity() {
 		}
 	}
 	fmt.Printf("Longest streak of days with sleep activity >= 75 in the past year: %d\n", longestStreak)
+
+	return streaksResult{
+		CurrentStreak: currentStreak,
+		LongestStreak: longestStreak,
+	}
 }
 
-func StreaksReadiness() {
+func streaksReadiness() streaksResult {
 	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02")
 	endDate := time.Now().Format("2006-01-02")
 
@@ -177,4 +189,33 @@ func StreaksReadiness() {
 		}
 	}
 	fmt.Printf("Longest streak of days with readiness score >= 75 in the past year: %d\n", longestStreak)
+
+	return streaksResult{
+		CurrentStreak: currentStreak,
+		LongestStreak: longestStreak,
+	}
+}
+
+func makeOuraAPIRequest(method, endpoint string) ([]byte, error) {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://api.ouraring.com/v2/%s", endpoint)
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	req.Header.Add("Authorization", "Bearer "+pat)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response: %w", err)
+	}
+
+	return body, nil
 }
