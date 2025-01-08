@@ -3,16 +3,47 @@
 - <https://cloud.ouraring.com/dashboard>
 - <https://cloud.ouraring.com/v2/docs>
 
-```sh
-export PAT=YOUR_OURA_PERSONAL_ACCESS_TOKEN
-export LOCAL_ONLY=true
+## Local Testing
 
-FUNCTION_TARGET=Streaks go run cmd/main.go
+```sh
+pack build \
+  --builder gcr.io/buildpacks/builder:v1 \
+  --env GOOGLE_FUNCTION_SIGNATURE_TYPE=http \
+  --env GOOGLE_FUNCTION_TARGET=Streaks \
+  oura-streaks
+```
+
+```sh
+docker run --rm -p 8080:8080 --env-file=.env oura-streaks
 ```
 
 ```sh
 curl localhost:8080
 ```
+
+## Deploy to Google Cloud Run Functions
+
+```sh
+gcloud functions deploy oura-streaks \
+  --gen2 \
+  --runtime=go123 \
+  --region=us-west1 \
+  --source=./pkg/streaks \
+  --entry-point=Streaks \
+  --trigger-http \
+  --allow-unauthenticated \
+  --memory=128Mi \
+  --cpu=.1 \
+  --env-vars-file=.env.yaml
+
+gcloud functions describe oura-streaks --region=us-west1
+gcloud functions delete oura-streaks --region=us-west1
+```
+
+## References
+
+- <https://cloud.google.com/functions/docs/create-deploy-http-go>
+- <https://github.com/GoogleCloudPlatform/functions-framework-go>
 
 <!-- 
 IDEAS:
@@ -30,6 +61,7 @@ TODO:
 
 <!-- 
 DONE (most recent first):
+- Local testing with `pack`
 - Streak counter
   - Days above 75
   - Longest streak this year

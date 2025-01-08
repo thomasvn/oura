@@ -1,4 +1,4 @@
-package streaks
+package oura
 
 import (
 	"encoding/json"
@@ -23,10 +23,10 @@ func init() {
 		panic("PAT environment variable not set")
 	}
 
-	functions.HTTP("Streaks", streaksHttpHandler)
+	functions.HTTP("Streaks", Streaks)
 }
 
-func streaksHttpHandler(w http.ResponseWriter, r *http.Request) {
+func Streaks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
