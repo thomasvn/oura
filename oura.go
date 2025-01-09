@@ -13,17 +13,22 @@ import (
 
 var pat string
 
-type streaksResult struct {
-	CurrentStreak int `json:"currentStreak"`
-	LongestStreak int `json:"longestStreak"`
-}
-
 func init() {
 	if pat = os.Getenv("PAT"); pat == "" {
 		panic("PAT environment variable not set")
 	}
 
 	functions.HTTP("Streaks", Streaks)
+	functions.HTTP("Heatmap", Heatmap)
+}
+
+// -----------------------------------------------------------------------------
+// STREAKS
+// -----------------------------------------------------------------------------
+
+type streaksResult struct {
+	CurrentStreak int `json:"currentStreak"`
+	LongestStreak int `json:"longestStreak"`
 }
 
 func Streaks(w http.ResponseWriter, r *http.Request) {
@@ -195,6 +200,100 @@ func streaksReadiness() streaksResult {
 		LongestStreak: longestStreak,
 	}
 }
+
+// -----------------------------------------------------------------------------
+// HEATMAP
+// -----------------------------------------------------------------------------
+
+/*
+SCORING:
+   0: "#FF4444", // Poor (0-49)
+   1: "#FFA700", // Below average (50-69)
+   2: "#44BB44", // Good (70-89)
+   3: "#196127", // Excellent (90-100)
+*/
+
+type heatmapResult struct {
+	Dates []string `json:"dates"`
+	Data  []int    `json:"data"`
+}
+
+func Heatmap(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.URL.Path {
+	case "/sleep":
+		json.NewEncoder(w).Encode(heatmapSleep())
+	case "/activity":
+		json.NewEncoder(w).Encode(heatmapActivity())
+	case "/readiness":
+		json.NewEncoder(w).Encode(heatmapReadiness())
+	default:
+		http.Error(w, "Not found", http.StatusNotFound)
+	}
+}
+
+func heatmapSleep() heatmapResult {
+	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02") // https://go.dev/src/time/format.go
+	endDate := time.Now().Format("2006-01-02")
+
+	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate))
+
+	var response struct {
+		Data []struct {
+			Score     int    `json:"score"`
+			TimeStamp string `json:"timestamp"`
+		} `json:"data"`
+	}
+	json.Unmarshal(responseBytes, &response)
+
+	dates := make([]string, 0, len(response.Data))
+	data := make([]int, 0, len(response.Data))
+
+	// Convert scores to heatmap levels (0-3) and collect dates
+	for _, entry := range response.Data {
+		dates = append(dates, entry.TimeStamp)
+
+		// Map scores to heatmap levels
+		var level int
+		switch {
+		case entry.Score >= 90:
+			level = 3 // Excellent
+		case entry.Score >= 70:
+			level = 2 // Good
+		case entry.Score >= 50:
+			level = 1 // Below average
+		default:
+			level = 0 // Poor
+		}
+		data = append(data, level)
+	}
+
+	return heatmapResult{
+		Dates: dates,
+		Data:  data,
+	}
+}
+
+func heatmapActivity() heatmapResult {
+	return heatmapResult{}
+}
+
+func heatmapReadiness() heatmapResult {
+	return heatmapResult{}
+}
+
+// -----------------------------------------------------------------------------
+// HELPERS
+// -----------------------------------------------------------------------------
 
 func makeOuraAPIRequest(method, endpoint string) ([]byte, error) {
 	client := &http.Client{}

@@ -10,6 +10,7 @@ pack build \
   --builder gcr.io/buildpacks/builder:v1 \
   --env GOOGLE_FUNCTION_SIGNATURE_TYPE=http \
   --env GOOGLE_FUNCTION_TARGET=Streaks \
+  --env-file=.env \
   oura-streaks
 ```
 
@@ -28,7 +29,7 @@ gcloud functions deploy oura-streaks \
   --gen2 \
   --runtime=go123 \
   --region=us-west1 \
-  --source=./pkg/streaks \
+  --source=. \
   --entry-point=Streaks \
   --trigger-http \
   --allow-unauthenticated \
@@ -56,11 +57,13 @@ IDEAS:
 TODO:
 - Streak counter
   - Refactor for readability
-  - Expose via an API
+- Heatmap APIs
+- Basic frontend for both these APIs
 -->
 
 <!-- 
 DONE (most recent first):
+- Deploy to Google Cloud Run Functions
 - Local testing with `pack`
 - Streak counter
   - Days above 75
