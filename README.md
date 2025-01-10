@@ -1,5 +1,7 @@
 # Oura Ring API
 
+Playing around with and visualizing Oura Ring data. Built using [Buildpacks](https://buildpacks.io/) and [Google Cloud Run Functions](https://github.com/GoogleCloudPlatform/functions-framework-go).
+
 - <https://cloud.ouraring.com/dashboard>
 - <https://cloud.ouraring.com/v2/docs>
 
@@ -50,7 +52,11 @@ gcloud functions delete oura-streaks --region=us-west1
 IDEAS:
 - Streak counter. Days above 75. "Longest streak this past year".
 - Heatmap of Sleep/Readiness/Activity Scores (github-style)
-- Live streaming of biometric data?
+- Steps taken? Heatmap? Line graph?
+- Calories Burned? Plot these together?
+- Live streaming of biometric data? Webhook Subscription?
+- Stress versus Recovery. PlusMinus.
+- Sedentary vs Low vs Medium vs High
 -->
 
 <!--

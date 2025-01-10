@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
@@ -42,30 +43,27 @@ func Streaks(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	days, _ := strconv.Atoi(r.URL.Query().Get("days"))
+	if days == 0 {
+		days = 365
+	}
+	startDate := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+
 	switch r.URL.Path {
 	case "/sleep":
-		json.NewEncoder(w).Encode(streaksSleep())
+		json.NewEncoder(w).Encode(fetchStreaks(fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate)))
 	case "/activity":
-		json.NewEncoder(w).Encode(streaksActivity())
+		json.NewEncoder(w).Encode(fetchStreaks(fmt.Sprintf("usercollection/daily_activity?start_date=%s&end_date=%s", startDate, endDate)))
 	case "/readiness":
-		json.NewEncoder(w).Encode(streaksReadiness())
-	case "/heartbeat":
-		json.NewEncoder(w).Encode(json.RawMessage(heartBeat()))
+		json.NewEncoder(w).Encode(fetchStreaks(fmt.Sprintf("usercollection/daily_readiness?start_date=%s&end_date=%s", startDate, endDate)))
 	default:
 		http.Error(w, "Not found", http.StatusNotFound)
 	}
 }
 
-func heartBeat() []byte {
-	response, _ := makeOuraAPIRequest("GET", "usercollection/personal_info")
-	return response
-}
-
-func streaksSleep() streaksResult {
-	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02") // https://go.dev/src/time/format.go
-	endDate := time.Now().Format("2006-01-02")
-
-	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate))
+func fetchStreaks(endpoint string) streaksResult {
+	responseBytes, _ := makeOuraAPIRequest("GET", endpoint)
 
 	var response struct {
 		Data []struct {
@@ -84,9 +82,8 @@ func streaksSleep() streaksResult {
 			break
 		}
 	}
-	fmt.Printf("Current streak of days with sleep score >= 75: %d\n", currentStreak)
 
-	// Longest streak this year
+	// Longest streak
 	longestStreak := 0
 	currentLongStreak := 0
 	for i := 0; i < len(response.Data); i++ {
@@ -99,101 +96,6 @@ func streaksSleep() streaksResult {
 			currentLongStreak = 0
 		}
 	}
-	fmt.Printf("Longest streak of days with sleep score >= 75 in the past year: %d\n", longestStreak)
-
-	return streaksResult{
-		CurrentStreak: currentStreak,
-		LongestStreak: longestStreak,
-	}
-}
-
-func streaksActivity() streaksResult {
-	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02")
-	endDate := time.Now().Format("2006-01-02")
-
-	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_activity?start_date=%s&end_date=%s", startDate, endDate))
-
-	var response struct {
-		Data []struct {
-			Score         int    `json:"score"`
-			TimeStamp     string `json:"timestamp"`
-			Steps         int    `json:"steps"`
-			TotalCalories int    `json:"total_calories"`
-		} `json:"data"`
-	}
-	json.Unmarshal(responseBytes, &response)
-
-	// Current streak
-	currentStreak := 0
-	for i := len(response.Data) - 1; i >= 0; i-- {
-		if response.Data[i].Score >= 75 {
-			currentStreak++
-		} else {
-			break
-		}
-	}
-	fmt.Printf("Current streak of days with activity score >= 75: %d\n", currentStreak)
-
-	// Longest streak this year
-	longestStreak := 0
-	currentLongStreak := 0
-	for i := 0; i < len(response.Data); i++ {
-		if response.Data[i].Score >= 75 {
-			currentLongStreak++
-			if currentLongStreak > longestStreak {
-				longestStreak = currentLongStreak
-			}
-		} else {
-			currentLongStreak = 0
-		}
-	}
-	fmt.Printf("Longest streak of days with sleep activity >= 75 in the past year: %d\n", longestStreak)
-
-	return streaksResult{
-		CurrentStreak: currentStreak,
-		LongestStreak: longestStreak,
-	}
-}
-
-func streaksReadiness() streaksResult {
-	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02")
-	endDate := time.Now().Format("2006-01-02")
-
-	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_readiness?start_date=%s&end_date=%s", startDate, endDate))
-
-	var response struct {
-		Data []struct {
-			Score     int    `json:"score"`
-			TimeStamp string `json:"timestamp"`
-		} `json:"data"`
-	}
-	json.Unmarshal(responseBytes, &response)
-
-	// Current streak
-	currentStreak := 0
-	for i := len(response.Data) - 1; i >= 0; i-- {
-		if response.Data[i].Score >= 75 {
-			currentStreak++
-		} else {
-			break
-		}
-	}
-	fmt.Printf("Current streak of days with readiness score >= 75: %d\n", currentStreak)
-
-	// Longest streak this year
-	longestStreak := 0
-	currentLongStreak := 0
-	for i := 0; i < len(response.Data); i++ {
-		if response.Data[i].Score >= 75 {
-			currentLongStreak++
-			if currentLongStreak > longestStreak {
-				longestStreak = currentLongStreak
-			}
-		} else {
-			currentLongStreak = 0
-		}
-	}
-	fmt.Printf("Longest streak of days with readiness score >= 75 in the past year: %d\n", longestStreak)
 
 	return streaksResult{
 		CurrentStreak: currentStreak,
@@ -229,24 +131,27 @@ func Heatmap(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
+	days, _ := strconv.Atoi(r.URL.Query().Get("days"))
+	if days == 0 {
+		days = 365
+	}
+	startDate := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	endDate := time.Now().Format("2006-01-02")
+
 	switch r.URL.Path {
 	case "/sleep":
-		json.NewEncoder(w).Encode(heatmapSleep())
+		json.NewEncoder(w).Encode(fetchHeatmap(fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate)))
 	case "/activity":
-		json.NewEncoder(w).Encode(heatmapActivity())
+		json.NewEncoder(w).Encode(fetchHeatmap(fmt.Sprintf("usercollection/daily_activity?start_date=%s&end_date=%s", startDate, endDate)))
 	case "/readiness":
-		json.NewEncoder(w).Encode(heatmapReadiness())
+		json.NewEncoder(w).Encode(fetchHeatmap(fmt.Sprintf("usercollection/daily_readiness?start_date=%s&end_date=%s", startDate, endDate)))
 	default:
 		http.Error(w, "Not found", http.StatusNotFound)
 	}
 }
 
-func heatmapSleep() heatmapResult {
-	startDate := time.Now().AddDate(0, 0, -365).Format("2006-01-02") // https://go.dev/src/time/format.go
-	endDate := time.Now().Format("2006-01-02")
-
-	responseBytes, _ := makeOuraAPIRequest("GET", fmt.Sprintf("usercollection/daily_sleep?start_date=%s&end_date=%s", startDate, endDate))
-
+func fetchHeatmap(endpoint string) heatmapResult {
+	responseBytes, _ := makeOuraAPIRequest("GET", endpoint)
 	var response struct {
 		Data []struct {
 			Score     int    `json:"score"`
@@ -281,14 +186,6 @@ func heatmapSleep() heatmapResult {
 		Dates: dates,
 		Data:  data,
 	}
-}
-
-func heatmapActivity() heatmapResult {
-	return heatmapResult{}
-}
-
-func heatmapReadiness() heatmapResult {
-	return heatmapResult{}
 }
 
 // -----------------------------------------------------------------------------
