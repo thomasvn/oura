@@ -47,6 +47,7 @@ gcloud functions delete oura-streaks --region=us-west1
 
 - <https://cloud.google.com/functions/docs/create-deploy-http-go>
 - <https://github.com/GoogleCloudPlatform/functions-framework-go>
+- <https://cal-heatmap.com/>
 
 <!-- 
 IDEAS:
@@ -61,14 +62,12 @@ IDEAS:
 
 <!--
 TODO:
-- Streak counter
-  - Refactor for readability
-- Heatmap APIs
 - Basic frontend for both these APIs
 -->
 
 <!-- 
 DONE (most recent first):
+- Heatmap APIs
 - Deploy to Google Cloud Run Functions
 - Local testing with `pack`
 - Streak counter
