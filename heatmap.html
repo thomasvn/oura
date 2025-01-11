@@ -1,0 +1,63 @@
+<!-- Trying to understand how this library works -->
+
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script src="https://unpkg.com/cal-heatmap/dist/cal-heatmap.min.js"></script>
+        <script src="https://unpkg.com/@popperjs/core@2"></script>
+        <script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/cal-heatmap/dist/cal-heatmap.css">
+    </head>
+    <body>
+        <div id="cal-heatmap"></div>
+        <script>
+            const sampleData = [
+                { date: "2025-01-01", value: 5 },
+                { date: "2025-01-02", value: 10 },
+                { date: "2025-01-03", value: 8 },
+                { date: "2025-01-04", value: 15 },
+                { date: "2025-01-05", value: 20 }
+            ];
+            const cal = new CalHeatmap();
+            cal.paint({
+                data: {
+                    source: sampleData
+                },
+                itemSelector: "#cal-heatmap",
+                domain: {
+                    type: "month",
+                },
+                subDomain: {
+                    type: "day",
+                },
+                range: 3,
+                tooltip: true,
+                legend: [0, 1, 2, 3]
+            }, [[Tooltip]]).then(() => {
+                console.log("Heatmap rendered successfully!");
+            }).catch((error) => {
+                console.error("Error rendering heatmap:", error);
+            });
+        </script>
+
+    <div id="cal-heatmap2"></div>
+    <script>
+        const sampleData2 = [
+            { date: '2012-01-01', value: 3 },
+            { date: '2012-01-02', value: 6 },
+        ];
+        const cal2 = new CalHeatmap();
+        cal2.paint({
+            data: {
+                source: sampleData2
+            },
+            itemSelector: "#cal-heatmap2"
+        }).then(() => {
+            console.log("Heatmap2 rendered successfully!");
+        }).catch((error) => {
+            console.error("Error rendering heatmap2:", error);
+        });
+    </script>
+    </body>
+</html>
+
