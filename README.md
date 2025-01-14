@@ -12,7 +12,6 @@ pack build \
   --builder gcr.io/buildpacks/builder:v1 \
   --env GOOGLE_FUNCTION_SIGNATURE_TYPE=http \
   --env GOOGLE_FUNCTION_TARGET=Streaks \
-  --env-file=.env \
   oura-streaks
 ```
 
@@ -62,14 +61,13 @@ IDEAS:
 
 <!--
 TODO:
-- Basic frontend for both these APIs
-- Optimize responses for the frontend
 - Backend caching?
 - Heatmap scrolling
 -->
 
 <!-- 
 DONE (most recent first):
+- Basic frontend for both these APIs
 - Heatmap APIs
 - Deploy to Google Cloud Run Functions
 - Local testing with `pack`

@@ -187,11 +187,6 @@
         }
 
         function updateHeatmap(data) {            
-            const formattedData = data.dates.map((date, index) => ({
-                date: date,
-                value: data.data[index]
-            }));
-            
             if (calHeatmap) {
                 calHeatmap.destroy();
             }
@@ -201,9 +196,9 @@
             calHeatmap.paint({
                 itemSelector: '#heatmap',
                 data: {
-                    source: formattedData,
+                    source: data,
                     x: 'date',
-                    y: 'value',
+                    y: 'score',
                     defaultValue: null
                 },
                 date: {
@@ -227,7 +222,7 @@
                 scale: {
                     color: {
                         range: ['#cfe2f3', '#0b5394'],
-                        domain: [0, 3]
+                        domain: [0, 4]
                     },
                 }
             }, [[Tooltip]]).catch((error) => {

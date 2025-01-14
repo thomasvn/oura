@@ -109,16 +109,19 @@ func fetchStreaks(endpoint string) streaksResult {
 
 /*
 SCORING:
-   0: "#FF4444", // Poor (0-49)
-   1: "#FFA700", // Below average (50-69)
-   2: "#44BB44", // Good (70-89)
-   3: "#196127", // Excellent (90-100)
+   0: Poor (0-59)
+   1: Below average (60-74)
+   2: Average (75-84)
+   3: Good (85-94)
+   4: Excellent (95-100)
 */
 
-type heatmapResult struct {
-	Dates []string `json:"dates"`
-	Data  []int    `json:"data"`
+type heatmapDataPoint struct {
+	Date  string `json:"date"`
+	Score int    `json:"score"`
 }
+
+type heatmapResult []heatmapDataPoint
 
 func Heatmap(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -160,32 +163,33 @@ func fetchHeatmap(endpoint string) heatmapResult {
 	}
 	json.Unmarshal(responseBytes, &response)
 
-	dates := make([]string, 0, len(response.Data))
-	data := make([]int, 0, len(response.Data))
+	// Create combined result
+	result := make(heatmapResult, 0, len(response.Data))
 
-	// Convert scores to heatmap levels (0-3) and collect dates
+	// Convert scores to heatmap levels (0-4) and collect dates
 	for _, entry := range response.Data {
-		dates = append(dates, entry.TimeStamp)
-
-		// Map scores to heatmap levels
+		// Map scores to heatmap levels with more granularity
 		var level int
 		switch {
-		case entry.Score >= 90:
-			level = 3 // Excellent
-		case entry.Score >= 70:
-			level = 2 // Good
-		case entry.Score >= 50:
+		case entry.Score >= 95:
+			level = 4 // Excellent
+		case entry.Score >= 85:
+			level = 3 // Good
+		case entry.Score >= 75:
+			level = 2 // Average
+		case entry.Score >= 60:
 			level = 1 // Below average
 		default:
 			level = 0 // Poor
 		}
-		data = append(data, level)
+
+		result = append(result, heatmapDataPoint{
+			Date:  entry.TimeStamp,
+			Score: level,
+		})
 	}
 
-	return heatmapResult{
-		Dates: dates,
-		Data:  data,
-	}
+	return result
 }
 
 // -----------------------------------------------------------------------------
