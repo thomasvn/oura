@@ -12,16 +12,19 @@
         <div id="cal-heatmap"></div>
         <script>
             const sampleData = [
-                { date: "2025-01-01", value: 5 },
-                { date: "2025-01-02", value: 10 },
-                { date: "2025-01-03", value: 8 },
-                { date: "2025-01-04", value: 15 },
-                { date: "2025-01-05", value: 20 }
+                { date: "2025-01-01", value: 0 },
+                { date: "2025-01-02", value: 1 },
+                { date: "2025-01-03", value: 2 },
+                { date: "2025-01-04", value: 0 },
+                { date: "2025-01-05", value: 3 }
             ];
             const cal = new CalHeatmap();
             cal.paint({
                 data: {
-                    source: sampleData
+                    source: sampleData,
+                    type: 'json',
+                    x: 'date',
+                    y: 'value'
                 },
                 itemSelector: "#cal-heatmap",
                 domain: {
@@ -31,8 +34,13 @@
                     type: "day",
                 },
                 range: 3,
-                tooltip: true,
-                legend: [0, 1, 2, 3]
+                scale: {
+                    opacity: {
+                        baseColor: '#2986CC',
+                        type: 'linear',
+                        domain: [3, 0],
+                    }
+                }
             }, [[Tooltip]]).then(() => {
                 console.log("Heatmap rendered successfully!");
             }).catch((error) => {

@@ -63,6 +63,9 @@ IDEAS:
 <!--
 TODO:
 - Basic frontend for both these APIs
+- Optimize responses for the frontend
+- Backend caching?
+- Heatmap scrolling
 -->
 
 <!-- 

@@ -6,6 +6,8 @@
     <title>Oura Ring Dashboard </title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/cal-heatmap/dist/cal-heatmap.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/cal-heatmap/dist/cal-heatmap.css">
     <style>
         body {
@@ -184,64 +186,53 @@
             }
         }
 
-        function updateHeatmap(data) {
-            console.log('Raw data:', data);
-            
-            // Transform data into array of objects format that Cal-HeatMap expects
+        function updateHeatmap(data) {            
             const formattedData = data.dates.map((date, index) => ({
-                date: Math.floor(new Date(date).getTime() / 1000),
+                date: date,
                 value: data.data[index]
             }));
             
-            console.log('Formatted data:', formattedData);
-
             if (calHeatmap) {
                 calHeatmap.destroy();
             }
             
-            console.log('Starting paint operation');
-            try {
-                calHeatmap = new CalHeatmap();
-                calHeatmap.paint({
-                    itemSelector: '#heatmap',
-                    data: {
-                        source: formattedData,
-                        x: 'date',
-                        y: 'value',
-                        groupY: 'sum',
-                        defaultValue: 0
-                    },
-                    domain: {
-                        type: 'month',
-                        gutter: 4,        // Add spacing between months
-                        label: {          // Add month labels
-                            text: 'MMM',
-                            position: 'top'
-                        }
-                    },
-                    subDomain: {
-                        type: 'day',
-                        width: 15,
-                        height: 15,
-                        radius: 2,
-                        color: {
-                            scale: {
-                                type: 'ordinal',
-                                domain: [0, 1, 2, 3],
-                                range: ['#ebedf0', '#9be9a8', '#40c463', '#216e39']
-                            },
-                            background: '#ebedf0'
-                        }
-                    },
-                    date: {              // Set the date range
-                        start: new Date(data.dates[0]),
-                        highlight: new Date()
+            const lookback = 5; // How many months to look back
+            calHeatmap = new CalHeatmap();
+            calHeatmap.paint({
+                itemSelector: '#heatmap',
+                data: {
+                    source: formattedData,
+                    x: 'date',
+                    y: 'value',
+                    defaultValue: null
+                },
+                date: {
+                    start: new Date(new Date().setMonth(new Date().getMonth() - lookback + 1))
+                },
+                range: lookback,
+                domain: {
+                    type: 'month',
+                    gutter: 5,
+                    label: {
+                        text: 'MMM',
+                        position: 'top'
                     }
-                });
-                console.log('Paint operation completed');
-            } catch (error) {
+                },
+                subDomain: {
+                    type: 'day',
+                    width: 15,
+                    height: 15,
+                    radius: 2.5,
+                },
+                scale: {
+                    color: {
+                        range: ['#cfe2f3', '#0b5394'],
+                        domain: [0, 3]
+                    },
+                }
+            }, [[Tooltip]]).catch((error) => {
                 console.error('Error in paint operation:', error);
-            }
+            });
         }
 
         function switchMetric(metric) {
