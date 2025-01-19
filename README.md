@@ -1,5 +1,7 @@
 # Oura Ring API
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/1c359a00-5e16-4d8b-bff4-28fce7c61966/deploy-status)](https://app.netlify.com/sites/thomasvn-oura/deploys)
+
 Playing around with and visualizing Oura Ring data. Built using [Buildpacks](https://buildpacks.io/) and [Google Cloud Run Functions](https://github.com/GoogleCloudPlatform/functions-framework-go).
 
 - <https://cloud.ouraring.com/dashboard>
@@ -55,18 +57,19 @@ IDEAS:
 - Steps taken? Heatmap? Line graph?
 - Calories Burned? Plot these together?
 - Live streaming of biometric data? Webhook Subscription?
-- Stress versus Recovery. PlusMinus.
 - Sedentary vs Low vs Medium vs High
 -->
 
 <!--
 TODO:
+- Stress versus Recovery. PlusMinus.
 - Backend caching?
 - Heatmap scrolling
 -->
 
 <!-- 
 DONE (most recent first):
+- Deploy to Netlify and SubDomain https://oura.thomasvn.dev
 - Basic frontend for both these APIs
 - Heatmap APIs
 - Deploy to Google Cloud Run Functions
