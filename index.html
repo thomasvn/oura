@@ -98,6 +98,22 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .card-description {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .card-description ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .card-description li {
+            margin: 3px 0;
+        }
     </style>
 </head>
 <body>
@@ -111,6 +127,9 @@
 
     <div class="dashboard">
         <div class="card streak-card">
+            <div class="card-description">
+                Tracks consecutive days with scores above 75
+            </div>
             <div class="streak-info">
                 <div class="streak-number" id="currentStreak">-</div>
                 <div class="streak-label">Current Streak</div>
@@ -122,6 +141,9 @@
         </div>
         
         <div class="card">
+            <div class="card-description">
+                Daily scores visualized with darker colors representing higher performance.
+            </div>
             <div id="heatmap"></div>
         </div>
     </div>
@@ -162,7 +184,7 @@
                 let streaksData = getCachedData(streaksCacheKey);
                 
                 if (!streaksData) {
-                    const streaksResponse = await fetch(`https://us-west1-thomasvn0.cloudfunctions.net/oura-streaks/${currentMetric}?days=365`);
+                    const streaksResponse = await fetch(`https://us-west1-thomasvn0.cloudfunctions.net/oura-streaks/${currentMetric}?days=160`);
                     streaksData = await streaksResponse.json();
                     setCachedData(streaksCacheKey, streaksData);
                 }
@@ -175,7 +197,7 @@
                 let heatmapData = getCachedData(heatmapCacheKey);
                 
                 if (!heatmapData) {
-                    const heatmapResponse = await fetch(`https://us-west1-thomasvn0.cloudfunctions.net/oura-heatmap/${currentMetric}?days=365`);
+                    const heatmapResponse = await fetch(`https://us-west1-thomasvn0.cloudfunctions.net/oura-heatmap/${currentMetric}?days=160`);
                     heatmapData = await heatmapResponse.json();
                     setCachedData(heatmapCacheKey, heatmapData);
                 }

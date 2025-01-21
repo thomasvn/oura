@@ -7,6 +7,10 @@ Playing around with and visualizing Oura Ring data. Built using [Buildpacks](htt
 - <https://cloud.ouraring.com/dashboard>
 - <https://cloud.ouraring.com/v2/docs>
 
+## Demo
+
+<https://oura.thomasvn.dev>
+
 ## Local Testing
 
 ```sh
@@ -52,12 +56,12 @@ gcloud functions delete oura-streaks --region=us-west1
 
 <!-- 
 IDEAS:
-- Streak counter. Days above 75. "Longest streak this past year".
-- Heatmap of Sleep/Readiness/Activity Scores (github-style)
 - Steps taken? Heatmap? Line graph?
 - Calories Burned? Plot these together?
 - Live streaming of biometric data? Webhook Subscription?
 - Sedentary vs Low vs Medium vs High
+- Bar graph. High + Medium + Low Activity Time.
+- What's most important? Energy. What's most representative? HRV + Readiness.
 -->
 
 <!--
@@ -71,7 +75,7 @@ TODO:
 DONE (most recent first):
 - Deploy to Netlify and SubDomain https://oura.thomasvn.dev
 - Basic frontend for both these APIs
-- Heatmap APIs
+- Heatmap of Sleep/Readiness/Activity Scores (github-style)
 - Deploy to Google Cloud Run Functions
 - Local testing with `pack`
 - Streak counter

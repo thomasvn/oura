@@ -107,15 +107,6 @@ func fetchStreaks(endpoint string) streaksResult {
 // HEATMAP
 // -----------------------------------------------------------------------------
 
-/*
-SCORING:
-   0: Poor (0-59)
-   1: Below average (60-74)
-   2: Average (75-84)
-   3: Good (85-94)
-   4: Excellent (95-100)
-*/
-
 type heatmapDataPoint struct {
 	Date  string `json:"date"`
 	Score int    `json:"score"`
